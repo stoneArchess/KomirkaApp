@@ -3,5 +3,7 @@
 
 
 Backend: ASP.NET API
-Fronend: React Native
+
+Frontend: React Native
+
 Db: MSSQL
