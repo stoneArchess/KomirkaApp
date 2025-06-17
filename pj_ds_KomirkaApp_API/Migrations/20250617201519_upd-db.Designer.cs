@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using pj_ds_KomirkaApp_API;
 
@@ -11,9 +12,11 @@ using pj_ds_KomirkaApp_API;
 namespace pj_ds_KomirkaApp_API.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20250617201519_upd-db")]
+    partial class upddb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,34 +73,6 @@ namespace pj_ds_KomirkaApp_API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Drawers");
-                });
-
-            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Transaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ActionType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("CellId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CellId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.User", b =>
@@ -166,25 +141,6 @@ namespace pj_ds_KomirkaApp_API.Migrations
                     b.Navigation("Drawer");
                 });
 
-            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Transaction", b =>
-                {
-                    b.HasOne("pj_ds_KomirkaApp_API.Models.Cell", "Cell")
-                        .WithMany("Transactions")
-                        .HasForeignKey("CellId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("pj_ds_KomirkaApp_API.Models.User", "User")
-                        .WithMany("Transactions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Cell");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.UserCellAccess", b =>
                 {
                     b.HasOne("pj_ds_KomirkaApp_API.Models.Cell", "Cell")
@@ -217,8 +173,6 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
                 {
-                    b.Navigation("Transactions");
-
                     b.Navigation("UserAccesses");
                 });
 
@@ -230,8 +184,6 @@ namespace pj_ds_KomirkaApp_API.Migrations
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.User", b =>
                 {
                     b.Navigation("CellAccesses");
-
-                    b.Navigation("Transactions");
 
                     b.Navigation("UserInfo")
                         .IsRequired();
