@@ -12,8 +12,8 @@ using pj_ds_KomirkaApp_API;
 namespace pj_ds_KomirkaApp_API.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20250617202235_upd-db2")]
-    partial class upddb2
+    [Migration("20250625004501_userinfoupd")]
+    partial class userinfoupd
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,12 +27,14 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("DrawerId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DrawerId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Height")
                         .HasColumnType("int");
@@ -56,9 +58,11 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Drawer", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -77,22 +81,24 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Transaction", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ActionType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("CellId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CellId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -105,15 +111,17 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -124,11 +132,11 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.UserCellAccess", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("CellId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CellId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("GrantedAt")
                         .HasColumnType("datetime2");
@@ -142,15 +150,13 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.UserInfo", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
+                    b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
+                    b.Property<string>("Picture")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");

@@ -12,8 +12,8 @@ using pj_ds_KomirkaApp_API;
 namespace pj_ds_KomirkaApp_API.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20250617201519_upd-db")]
-    partial class upddb
+    [Migration("20250623232700_initt")]
+    partial class initt
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,12 +27,14 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("DrawerId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DrawerId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Height")
                         .HasColumnType("int");
@@ -56,9 +58,11 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Drawer", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -75,17 +79,49 @@ namespace pj_ds_KomirkaApp_API.Migrations
                     b.ToTable("Drawers");
                 });
 
+            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CellId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CellId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Transactions");
+                });
+
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -96,11 +132,11 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.UserCellAccess", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("CellId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CellId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("GrantedAt")
                         .HasColumnType("datetime2");
@@ -114,14 +150,14 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.UserInfo", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<string>("Picture")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -139,6 +175,25 @@ namespace pj_ds_KomirkaApp_API.Migrations
                         .IsRequired();
 
                     b.Navigation("Drawer");
+                });
+
+            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Transaction", b =>
+                {
+                    b.HasOne("pj_ds_KomirkaApp_API.Models.Cell", "Cell")
+                        .WithMany("Transactions")
+                        .HasForeignKey("CellId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("pj_ds_KomirkaApp_API.Models.User", "User")
+                        .WithMany("Transactions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cell");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.UserCellAccess", b =>
@@ -173,6 +228,8 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
                 {
+                    b.Navigation("Transactions");
+
                     b.Navigation("UserAccesses");
                 });
 
@@ -184,6 +241,8 @@ namespace pj_ds_KomirkaApp_API.Migrations
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.User", b =>
                 {
                     b.Navigation("CellAccesses");
+
+                    b.Navigation("Transactions");
 
                     b.Navigation("UserInfo")
                         .IsRequired();

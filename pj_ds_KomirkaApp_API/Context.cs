@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using pj_ds_KomirkaApp_API.Models;
 using System;
 using System.Reflection.Metadata;
@@ -21,12 +22,15 @@ namespace pj_ds_KomirkaApp_API
 
         // Temp
         private string _connectionString = "Data Source = (localdb)\\MSSQLLocalDB;Initial Catalog = KomirkaDb; Integrated Security = True; Connect Timeout = 30;";
-
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-
+            //IConfigurationRoot configuration = new ConfigurationBuilder()
+            //.SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+            //.AddJsonFile("appsettings.json")
+            //.Build();
 
             options.UseSqlServer(_connectionString);
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

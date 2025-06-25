@@ -2,7 +2,7 @@
 {
     public class Drawer
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         public string Address { get; set; } 
         public TimeOnly OpensTime { get; set; }

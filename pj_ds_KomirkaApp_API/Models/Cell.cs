@@ -2,12 +2,12 @@
 {
     public class Cell
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string UniqueNumber { get; set; }
         public int WightCapacity { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
-        public Guid DrawerId { get; set; }
+        public int DrawerId { get; set; }
 
         public Drawer Drawer { get; set; }
 

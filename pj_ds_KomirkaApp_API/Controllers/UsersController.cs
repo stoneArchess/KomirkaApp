@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Security.Policy;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using pj_ds_KomirkaApp_API;
 using pj_ds_KomirkaApp_API.Models;
 
 namespace pj_ds_KomirkaApp_API.Controllers
 {
-    // aside from all this necessary junk we need:
-    // - password hashing
-    // - checking for passwords/numbers pairs
-    // - more attributes to user its a lot more larger dude
-    // - a lot of other stuff my sleep deprived mind is obfuscating from me
-
 
 
     [Route("api/[controller]")]
@@ -23,94 +25,103 @@ namespace pj_ds_KomirkaApp_API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly Context _context;
-
-        public UsersController(Context context)
+        private readonly IPasswordHasher<User> _hasher;
+        private readonly IConfiguration _cfg;
+        public UsersController(Context context,IPasswordHasher<User> hasher, IConfiguration cfg)
         {
             _context = context;
+            _hasher = hasher;
+            _cfg = cfg;
         }
 
-        // GET: api/Users
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register(RegisterDto dto)
         {
-            return await _context.Users.ToListAsync();
-        }
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                return BadRequest("Email already in use.");
 
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(Guid id)
-        {
-            var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
+            var userInfo = new UserInfo
             {
-                return NotFound();
-            }
+                Name = dto.Name,
+            };
 
-            return user;
-        }
-
-        // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(Guid id, User user)
-        {
-            if (id != user.Id)
+            var user = new User
             {
-                return BadRequest();
-            }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
+                UserInfo = userInfo,
+                Email = dto.Email,
+                PasswordHash = _hasher.HashPassword(null!, dto.Password),
+            };
+            _context.UsersInfo.Add(userInfo);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            var token = CreateJwt(user);
+            return Ok(new { token });
         }
 
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(Guid id)
+        
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(LoginDto dto)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
+            if (user is null)
+                return Unauthorized("Invalid credentials.");
+
+            var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+            if (result != PasswordVerificationResult.Success)
+                return Unauthorized("Invalid credentials.");
+
+            var token = CreateJwt(user);
+            return Ok(new { token });
+        }
+
+        // gets info from the user
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<ActionResult<MeDto>> Me()
+        {
+            var idString = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                        ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            var user = await _context.Users.FindAsync(int.Parse(idString));
+            return new MeDto(user!.Email, user.UserInfo.Name);
+        }
+
+
+
+
+
+
+        // helper methods
+        private string CreateJwt(User user)
+        {
+            var claims = new[]
             {
-                return NotFound();
-            }
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        };
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            return NoContent();
+            var token = new JwtSecurityToken(
+                issuer: _cfg["Jwt:Issuer"],
+                audience: _cfg["Jwt:Issuer"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private bool UserExists(Guid id)
-        {
-            return _context.Users.Any(e => e.Id == id);
-        }
+
+        // DTOs
+        public record RegisterDto(string Email, string Name, string Password);
+        public record LoginDto(string Email, string Password);
+        public record MeDto(string Email, string Name);
     }
 }

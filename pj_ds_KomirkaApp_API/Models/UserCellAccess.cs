@@ -2,8 +2,8 @@
 {
     public class UserCellAccess
     {
-        public Guid UserId { get; set; }
-        public Guid CellId { get; set; }
+        public int UserId { get; set; }
+        public int CellId { get; set; }
 
         //arbitrary
         public DateTime GrantedAt { get; set; }
