@@ -66,5 +66,71 @@ export const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#1e90ff',
     },
+    changeText: {marginTop: 8, color: '#007bff'},
+    username: {fontSize: 24, fontWeight: '600', marginBottom: 8},
+    description: {fontSize: 16, textAlign: 'center'},
+    profileInput: {
+        alignSelf: 'stretch',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 6,
+        padding: 10,
+        marginBottom: 12,
+        fontSize: 16,
+    },
+    // profileInput: {
+    //     flex: 1,
+    //     borderBottomWidth: 1,
+    //     borderBottomColor: '#aaa',
+    //     fontSize: 16,
+    //     paddingVertical: 2,
+    //     color: '#222',
+    // },
+    multiline: {height: 100, textAlignVertical: 'top'},
+    buttonRow: {flexDirection: 'row', gap: 12, marginTop: 24},
+    bgImage: {
+        ...StyleSheet.absoluteFillObject,
+        height: 180,
+    },
+
+    profileImageWrapper: {
+        position: 'absolute',
+        top: 130,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+    },
+    profileImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 50,
+    },
+    infoContainer: {
+        flex: 1,
+        marginTop: 60,
+        paddingHorizontal: 20,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    label: {
+        flex: 1,
+        fontWeight: '600',
+        fontSize: 16,
+        color: '#555',
+    },
+
+    value: {
+        flex: 2,
+        fontSize: 16,
+        color: '#222',
+    },
+
+    unmetReqs: {
+        color: 'red',
+        textAlign: 'left',
+        fontSize: 12
+    }
 });
 

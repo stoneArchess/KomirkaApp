@@ -1,9 +1,10 @@
 import React, {use, useState} from "react";
 import axios from "axios";
-import {Alert, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {styles} from "@/styles/styles";
 import {Href, Link, useRouter} from "expo-router";
 import {useUser} from "@/contexts/userContext";
+import {validatePassword} from "@/app/passwordValidation";
 
 
 export default function  Register () {
@@ -11,11 +12,15 @@ export default function  Register () {
     const [tempEmail, setTempEmail]     = useState('');
     const [tempPassword, setTempPassword] = useState('');
 
+
+    const { valid, reasons } = validatePassword(tempPassword);
     const { register } = useUser();
     const [loading,  setLoading]  = useState(false);
 
     const handleRegister = async () => {
         try {
+            if(!valid)
+                return;
             setLoading(true);
             await register(tempEmail, tempPassword, tempUsername);
         } catch (e: any) {
@@ -25,12 +30,7 @@ export default function  Register () {
         }
     };
 
-    if(loading)
-        return (
-            <View  style={styles.container}>
-                <Text>Loading...</Text>
-            </View>
-        )
+    if (loading) return <ActivityIndicator style={{flex: 1}} />;
     return (
         <View style={styles.container}>
              <Link href={"auth/login" as Href} style={styles.link}>
@@ -62,6 +62,15 @@ export default function  Register () {
                 secureTextEntry
                 style={styles.input}
             />
+
+            {!valid && tempPassword.length > 0 && (
+                <View style={{ marginBottom: 12, paddingLeft: 24,  width: '100%'}}>
+                    {reasons.map(r => (
+                        <Text key={r} style={styles.unmetReqs}>{r}</Text>
+                    ))}
+                </View>
+            )}
+
 
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={handleRegister}>

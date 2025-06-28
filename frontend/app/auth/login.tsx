@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import axios from "axios";
-import {Alert, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {styles} from "@/styles/styles";
 import {Href, Link, useRouter} from "expo-router";
 import {useUser} from "@/contexts/userContext";
@@ -24,16 +24,11 @@ export default function  Login () {
         }
     };
 
-    if(loading)
-        return (
-            <View  style={styles.container}>
-                <Text>Loading...</Text>
-            </View>
-        )
+    if (loading) return <ActivityIndicator style={{flex: 1}} />;
     return (
         <View style={styles.container}>
             <Link href={"/auth/register" as Href} style={styles.link}>
-                Don't have an account? <Text style={{ fontWeight: 'bold' }}>Sign up</Text>
+                Don&apos;t have an account? <Text style={{ fontWeight: 'bold' }}>Sign up</Text>
             </Link>
             <Text style={styles.title}>Log in</Text>
 
