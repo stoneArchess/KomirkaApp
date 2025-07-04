@@ -7,14 +7,18 @@ import {
     StyleSheet,
     Button,
     KeyboardAvoidingView,
-    Platform,
+    Platform, Alert, ActivityIndicator,
 } from 'react-native';
+import {router} from "expo-router";
+import {useUser} from "@/contexts/userContext";
 
 const CODE_LENGTH = 6;
 
 export default function EmailValidation() {
     const [code, setCode] = useState('');
     const inputRef = useRef<TextInput | null>(null);
+    const [loading, setLoading] = useState(false);
+    const {verify} = useUser();
 
     const handleChange = (text: string) => {
         const sanitized = text.replace(/[^0-9]/g, '').slice(0, CODE_LENGTH);
@@ -23,9 +27,27 @@ export default function EmailValidation() {
 
     const focusInput = () => inputRef.current?.focus();
 
-    const handleSubmit = () => {
-        console.log('Submitted code:', code);
+    const handleSubmit = async () => {
+        if (code.length !== CODE_LENGTH) return;
+
+        setLoading(true);
+
+        try {
+            if(code.length !== CODE_LENGTH)
+                return;
+
+            setLoading(true);
+            await verify(code);
+
+        } catch (error) {
+            Alert.alert('Error', 'Network error. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
+
+
+
 
     const boxes = [...Array(CODE_LENGTH)].map((_, i) => {
         const digit = code[i] || '';
@@ -46,6 +68,7 @@ export default function EmailValidation() {
         );
     });
 
+    if (loading) return <ActivityIndicator style={{flex: 1}} />;
     return (
         <KeyboardAvoidingView
             behavior={Platform.select({ ios: 'padding', android: undefined })}

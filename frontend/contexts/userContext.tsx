@@ -31,6 +31,7 @@ type UserContextType = {
     tokens: AuthTokens | null;
     isAuthenticated: boolean;
 
+    verify: (code: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     update: (name: string, description: string, region: string, selectedTheme: string) => Promise<void>;
     register: (email: string, password: string, name: string) => Promise<void>;
@@ -46,6 +47,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
     const [user,    setUser]   = useState<User | null>(null);
     const [tokens,  setTokens] = useState<AuthTokens | null>(null);
+    const [userId, setUserId] = useState<number | null>(null);
 
     const isAuthenticated = !!tokens?.access;
 
@@ -86,6 +88,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
+        });
+        console.log(res);
+        if (!res.ok) throw new Error("Invalid credentials");
+
+        const { token, expiresIn } = await res.json();
+        const u = await fetchMe(token);
+        await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
+        router.replace("/");
+    };
+    const verify = async (code: string) => {
+        const res = await fetch(`${API_BASE}/api/users/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, code }),
         });
         if (!res.ok) throw new Error("Invalid credentials");
 
@@ -141,6 +157,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         tokens,
         isAuthenticated,
         login,
+        verify,
         register,
         logout,
         update,

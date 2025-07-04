@@ -131,6 +131,82 @@ export const styles = StyleSheet.create({
         color: 'red',
         textAlign: 'left',
         fontSize: 12
-    }
+    },
+    // should add this for every other style sheet
+    // cellSelection
+
+    root: {
+        flex: 1,
+    },
+    listContent: {
+        paddingBottom: 16,
+    },
+    item: {
+        margin: 4,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cellLabel: {
+        color: '#ffffff',
+        fontWeight: '600',
+    },
+    symbol: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        fontSize: 18,
+    },
+    modalContent: {
+        padding: 16,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    modalSymbol: {
+        fontSize: 24,
+        marginBottom: 8,
+    },
+    modalText: {
+        marginBottom: 4,
+        textTransform: 'capitalize',
+    },
+    box: {
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    //map
+
+
+    sheetContent:  {minHeight: 100, padding: 16, backgroundColor: '#CCAA77' },
+    openButton: {
+        marginTop: 50,
+        alignSelf: 'center',
+        padding: 10,
+        backgroundColor: '#1E90FF',
+        borderRadius: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.3)', // semi-transparent overlay
+    },
+    modalContentMap: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+    },
+    closeButton: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#FF6347',
+        borderRadius: 8,
+    },
+
 });
 
