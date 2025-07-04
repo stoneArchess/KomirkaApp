@@ -75,16 +75,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchMe = async (accessToken: string) => {
 
-        const res = await fetch(`${API_BASE}/api/users/me`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
+        console.log("access token: ");
+        console.log(accessToken);
+        const res = await fetch(`${API_BASE}/api/Users/me`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
         });
-        console.log(res);
-        if (!res.ok) throw new Error("Unable to fetch user profile");
+        console.log(res)
+
+        if(!res.ok) throw Error("Couldn't get user data")
         return (await res.json()) as User;
     };
 
     const login = async (email: string, password: string) => {
-        const res = await fetch(`${API_BASE}/api/users/login`, {
+        const res = await fetch(`${API_BASE}/api/Users/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
@@ -95,7 +101,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const { token, expiresIn } = await res.json();
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
-        router.replace("/");
+        router.replace("/map");
     };
     const verify = async (code: string) => {
         const res = await fetch(`${API_BASE}/api/users/verify`, {
@@ -108,7 +114,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const { token, expiresIn } = await res.json();
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
-        router.replace("/");
+        router.replace("/map");
     };
 
     const register = async (email: string, password: string, name: string) => {
@@ -118,12 +124,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password, name }),
         });
+        console.log(res);
         if (!res.ok) throw new Error("Registration failed");
-
+        console.log("I AM HERE");
         const { token, expiresIn } = await res.json();
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
-        router.replace("/");
+        console.log(token, expiresIn);
+        router.replace("/map");
     };
 
     const update = async (name: string, description: string, region: string, selectedTheme: string) => {

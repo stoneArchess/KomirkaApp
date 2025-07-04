@@ -3,6 +3,7 @@ import {UserProvider} from "@/contexts/userContext";
 import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 import {CabinetProvider} from "@/contexts/cabinetContext";
+import Register from "@/app/auth/register";
 
 export default function RootLayout() {
   return <UserProvider>
@@ -10,6 +11,7 @@ export default function RootLayout() {
                 <GestureHandlerRootView>
                      <BottomSheetModalProvider>
                          <Stack
+                             initialRouteName = "auth/register"
                               screenOptions={{
                                   animation: 'fade',
                                   headerShown: false,

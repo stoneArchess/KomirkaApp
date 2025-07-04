@@ -16,6 +16,7 @@ export type Cell = {
 
 export type Cabinet = {
     id: number;
+    address: string;
     longitude: number;
     latitude: number;
 };
@@ -24,12 +25,12 @@ export type CabinetContextType = {
     userCells: Cell[];
     allCells: Cell[];
     cabinets: Cabinet[];
-    cabinetCells: Record<number, Cell[]>;
+    cabinetCells: Map<number, Cell[]>
 
     getUserCells: () => Promise<void>;
     getAllCells: () => Promise<void>;
     getCabinets: () => Promise<void>;
-    getCabinetCells: (cabinetId: number) => Promise<void>;
+    getCabinetCells: (cabinetId: number) => Promise<Cell[]>;
 
     changeOccupancy: (cellId: number, isOccupied: boolean) => Promise<void>;
     openCell: (cellId: number) => Promise<void>;
@@ -48,7 +49,7 @@ export const CabinetProvider = ({ children }: { children: ReactNode }) => {
     const [userCells, setUserCells] = useState<Cell[]>([]);
     const [allCells, setAllCells] = useState<Cell[]>([]);
     const [cabinets, setCabinets] = useState<Cabinet[]>([]);
-    const [cabinetCells, setCabinetCells] = useState<Record<number, Cell[]>>({});
+    const [cabinetCells, setCabinetCells] = useState<Map<number, Cell[]>>(new Map());
 
     const getUserCells = async () => {
         if (!user) return;
@@ -69,6 +70,7 @@ export const CabinetProvider = ({ children }: { children: ReactNode }) => {
 
     const getCabinets = async () => {
         const res = await fetch(`${API_BASE}/api/cabinets`, {
+            method: "GET",
             headers: authHeaders(),
         });
         if (!res.ok) throw new Error("Unable to fetch cabinets");
@@ -76,12 +78,17 @@ export const CabinetProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const getCabinetCells = async (cabinetId: number) => {
-        const res = await fetch(`${API_BASE}/api/cabinets/${cabinetId}/cells`, {
-            headers: authHeaders(),
-        });
+        const res  = await fetch(`${API_BASE}/api/cabinets/${cabinetId}/cells`,
+            { headers: authHeaders() });
         if (!res.ok) throw new Error("Unable to fetch cells for cabinet");
         const data: Cell[] = await res.json();
-        setCabinetCells((prev) => ({ ...prev, [cabinetId]: data }));
+
+        setCabinetCells(prev => {
+            const next = new Map(prev);
+            next.set(cabinetId, data);
+            return next;
+        });
+        return data;                      // so callers can use it immediately
     };
 
     const changeOccupancy = async (cellId: number, isOccupied: boolean) => {
@@ -95,10 +102,12 @@ export const CabinetProvider = ({ children }: { children: ReactNode }) => {
         const apply = (arr: Cell[]) => arr.map((c) => (c.id === cellId ? { ...c, isOccupied } : c));
         setUserCells(apply);
         setAllCells(apply);
-        setCabinetCells((prev) => {
-            const copy: Record<number, Cell[]> = {};
-            for (const key of Object.keys(prev)) copy[+key] = apply(prev[+key]);
-            return copy;
+        setCabinetCells(prev => {
+            const next = new Map(prev);             // shallow‑copy the map
+            for (const [cabId, cells] of next) {
+                next.set(cabId, apply(cells));        // mutate only the affected arrays
+            }
+            return next;
         });
     };
 

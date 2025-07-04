@@ -1,91 +1,26 @@
 
 import { Stack } from 'expo-router';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import { View, Text, StyleSheet, Animated,TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import BottomSheet, {SCREEN_HEIGHT} from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import {styles} from "@/styles/styles";
-import {Cell} from "@/app/cellSelection";
-import {useCabinet} from "@/contexts/cabinetContext";
-
-export type Poi = {
-    id: number,
-    boxes: Cell[],
-    address: string,
-    coordinate: { latitude: number, longitude: number },
-};
-
-const pois: Poi[] = [
-    {
-        id: 1,
-        address: 'street name n2',
-        coordinate: { latitude:  50.06092232009283, longitude: 14.47394388197166 },
-        boxes: [
-            { id: 'c2', label: 'Middle', width: 1, height: 1, symbol: "❄️" },
-            { id: 'c3', label: 'corner 1', width: 4, height: 1 },
-
-            { id: 'c4', label: 'Middle Left', width: 2, height: 1 },
-            { id: 'c5', label: 'Middle', width: 1, height: 1 },
-            { id: 'c6', label: 'Mid right', width: 2, height: 1 },
-
-            { id: 'c7', label: 'corner 3', width: 2, height: 2 },
-            { id: 'c8', label: 'bott0m', width: 1, height: 2, symbol: "❄️"  },
-            { id: 'c9', label: 'corner 4', width: 2, height: 2 },
-        ],
-    },
-    {
-        id: 2,
-        address: 'street name n5',
-        coordinate: { latitude: 50.05639464914488, longitude: 14.488102545725791 },
-        boxes: [
-            { id: 'c1', label: 'corner 1', width: 4, height: 1, symbol: "❄️"  },
-            { id: 'c11', label: 'Middle', width: 1, height: 1 },
-            { id: 'c2', label: 'Middle', width: 1, height: 1, symbol: "❄️" },
-            { id: 'c3', label: 'corner 1', width: 4, height: 1 },
-
-            { id: 'c4', label: 'Middle Left', width: 2, height: 1 },
-            { id: 'c5', label: 'Middle', width: 1, height: 1 },
-            { id: 'c6', label: 'Mid right', width: 2, height: 1 },
-
-            { id: 'c7', label: 'corner 3', width: 2, height: 2 },
-            { id: 'c8', label: 'bott0m', width: 1, height: 2, symbol: "❄️"  },
-            { id: 'c9', label: 'corner 4', width: 2, height: 2 },
-        ],
-    },
-    {
-        id: 3,
-        boxes: [
-            { id: 'c1', label: 'corner 1', width: 4, height: 1, symbol: "❄️"  },
-            { id: 'c11', label: 'Middle', width: 1, height: 1 },
-            { id: 'c2', label: 'Middle', width: 1, height: 1, symbol: "❄️" },
-            { id: 'c3', label: 'corner 1', width: 4, height: 1 },
-
-            { id: 'c4', label: 'Middle Left', width: 2, height: 1 },
-            { id: 'c5', label: 'Middle', width: 1, height: 1 },
-            { id: 'c6', label: 'Mid right', width: 2, height: 1 },
-
-            { id: 'c31', label: 'corner 1', width: 3, height: 1, symbol: "❄️"  },
-            { id: 'c32', label: 'corner 1', width: 2, height: 1 },
-
-            { id: 'c7', label: 'corner 3', width: 2, height: 2 },
-            { id: 'c8', label: 'bott0m', width: 1, height: 2, symbol: "❄️"  },
-            { id: 'c9', label: 'corner 4', width: 2, height: 2 },
-        ],
-        address: 'street street n1',
-        coordinate: { latitude: 50.05584162188565, longitude: 14.468560359631688 },
-    },
-];
+import {useCabinet, Cell, Cabinet} from "@/contexts/cabinetContext";
 
 export default function MapScreen() {
     const snapPoints = useMemo(() => ['15%', '40%'], []);
     console.log(snapPoints);
-    const [selectedPoi, setSelectedPoi] = useState<Poi | null>();
+    const [selectedCabinet, setSelectedCabinet] = useState<Cabinet | null>();
 
-    const {getCabinets, getAllCells} = useCabinet();
+    const {getCabinets, cabinetCells, cabinets} = useCabinet();
 
+    useEffect(() => {
+        getCabinets();
+        console.log("cabinets:", cabinets.length);
+    }, []);
 
 
     const panelAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -103,12 +38,12 @@ export default function MapScreen() {
             duration: 300,
             useNativeDriver: false,
         }).start(() => {
-            setSelectedPoi(null);
+            setSelectedCabinet(null);
         });
     };
 
-    const handleMarkerPress = (poi: Poi) => {
-        setSelectedPoi(poi);
+    const handleMarkerPress = (poi: Cabinet) => {
+        setSelectedCabinet(poi);
         openPanel();
     };
 
@@ -127,17 +62,17 @@ export default function MapScreen() {
                         longitudeDelta: 0.05,
                     }}
                 >
-                    {pois.map((poi) => (
+                    {cabinets.map((cabinet) => (
                         <Marker
-                            key={poi.id}
-                            coordinate={poi.coordinate}
-                            title={poi.address}
-                            onPress={() => handleMarkerPress(poi)}
+                            key={cabinet.id}
+                            coordinate={{latitude: Number(cabinet.latitude),longitude:  Number(cabinet.longitude)}}
+                            title={cabinet.address}
+                            onPress={() => handleMarkerPress(cabinet)}
                         />
                     ))}
                 </MapView>
 
-                {selectedPoi && (
+                {selectedCabinet && (
                     <Animated.View
                         style={[
                             {
@@ -145,13 +80,13 @@ export default function MapScreen() {
                             },s.panel
                         ]}
                     >
-                        <Text style={s.title}>{selectedPoi.address}</Text>
+                        <Text style={s.title}>{selectedCabinet.address}</Text>
 
                         <TouchableOpacity style={s.button} onPress={() => {
                             router.push({
                                 pathname: '/cellSelection',
                                 params: {
-                                    boxes: JSON.stringify(selectedPoi?.boxes),
+                                    cabinetId: selectedCabinet.id,
                                 },
                             })
                         }}>
