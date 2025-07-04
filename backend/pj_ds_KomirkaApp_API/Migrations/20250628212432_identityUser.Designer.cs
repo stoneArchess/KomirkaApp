@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using pj_ds_KomirkaApp_API;
 
@@ -11,9 +12,11 @@ using pj_ds_KomirkaApp_API;
 namespace pj_ds_KomirkaApp_API.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20250628212432_identityUser")]
+    partial class identityUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,7 +158,38 @@ namespace pj_ds_KomirkaApp_API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cabinet", b =>
+            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DrawerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UniqueNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WightCapacity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DrawerId");
+
+                    b.ToTable("Cells");
+                });
+
+            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Drawer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -170,59 +204,12 @@ namespace pj_ds_KomirkaApp_API.Migrations
                     b.Property<TimeOnly>("ClosesTime")
                         .HasColumnType("time");
 
-                    b.Property<string>("Latitude")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Longitude")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<TimeOnly>("OpensTime")
                         .HasColumnType("time");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cabinets");
-                });
-
-            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CabinetId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("HasAC")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsOccupied")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsReinforced")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("UniqueNumber")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WeightCapacity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Width")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CabinetId");
-
-                    b.ToTable("Cells");
+                    b.ToTable("Drawers");
                 });
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Transaction", b =>
@@ -419,13 +406,13 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
                 {
-                    b.HasOne("pj_ds_KomirkaApp_API.Models.Cabinet", "Cabinet")
+                    b.HasOne("pj_ds_KomirkaApp_API.Models.Drawer", "Drawer")
                         .WithMany("Cells")
-                        .HasForeignKey("CabinetId")
+                        .HasForeignKey("DrawerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Cabinet");
+                    b.Navigation("Drawer");
                 });
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Transaction", b =>
@@ -477,16 +464,16 @@ namespace pj_ds_KomirkaApp_API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cabinet", b =>
-                {
-                    b.Navigation("Cells");
-                });
-
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Cell", b =>
                 {
                     b.Navigation("Transactions");
 
                     b.Navigation("UserAccesses");
+                });
+
+            modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.Drawer", b =>
+                {
+                    b.Navigation("Cells");
                 });
 
             modelBuilder.Entity("pj_ds_KomirkaApp_API.Models.User", b =>

@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using pj_ds_KomirkaApp_API.Models;
 using System.Text;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,8 +28,11 @@ var jwtKey = builder.Configuration["Jwt:Key"]!;
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
 var signKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -44,11 +48,17 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();      
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddDbContext<Context>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-
-
+builder.Services.AddIdentityCore<User>(options =>
+{
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddEntityFrameworkStores<Context>()
+.AddDefaultTokenProviders();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -61,10 +71,9 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
-
 
 app.Run();
