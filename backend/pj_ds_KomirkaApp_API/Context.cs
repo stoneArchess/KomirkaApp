@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -10,69 +12,67 @@ using ConfigurationManager = System.Configuration.ConfigurationManager;
 
 namespace pj_ds_KomirkaApp_API
 {
-    public class Context : DbContext
+    public class Context : IdentityDbContext<User, IdentityRole<int>, int>
     {
-        public DbSet<User> Users { get; set; }
+        private readonly IConfiguration _cfg;      
         public DbSet<UserInfo> UsersInfo { get; set; }
-        public DbSet<Drawer> Drawers { get; set; }
+        public DbSet<Cabinet> Cabinets { get; set; }
         public DbSet<Cell> Cells { get; set; }
         public DbSet<UserCellAccess> UserCellAccesses { get; set; }
-
         public DbSet<Transaction> Transactions { get; set; }
 
-        // Temp
-        private string _connectionString = "Data Source = (localdb)\\MSSQLLocalDB;Initial Catalog = KomirkaDb; Integrated Security = True; Connect Timeout = 30;";
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
+        public Context(IConfiguration cfg)
         {
-            //IConfigurationRoot configuration = new ConfigurationBuilder()
-            //.SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            //.AddJsonFile("appsettings.json")
-            //.Build();
-
-            options.UseSqlServer(_connectionString);
-
+            _cfg = cfg;
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
+            => options.UseSqlServer(_cfg.GetConnectionString("DefaultConnection"));
+
+        protected override void OnModelCreating(ModelBuilder model)
         {
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.UserInfo)
-                .WithOne(ai => ai.User)
-                .HasForeignKey<UserInfo>(ai => ai.UserId);
+            base.OnModelCreating(model);
 
-            modelBuilder.Entity<UserInfo>()
-                .HasKey(ai => ai.UserId);
+            model.Entity<User>().ToTable("Users");
 
-            modelBuilder.Entity<Cell>()
-                .HasOne(p => p.Drawer)
-                .WithMany(u => u.Cells)
-                .HasForeignKey(p => p.DrawerId)
-                .OnDelete(DeleteBehavior.Cascade);
+            model.Entity<User>()
+                  .HasOne(u => u.UserInfo)
+                  .WithOne(i => i.User)
+                  .HasForeignKey<UserInfo>(i => i.UserId);
 
-            modelBuilder.Entity<UserCellAccess>()
-                .HasKey(uca => new { uca.UserId, uca.CellId });
+            model.Entity<UserInfo>()
+                  .HasKey(i => i.UserId);
 
-            modelBuilder.Entity<UserCellAccess>()
-                .HasOne(uca => uca.User)
-                .WithMany(u => u.CellAccesses)
-                .HasForeignKey(uca => uca.UserId);
+            model.Entity<Cell>()
+                  .HasOne(c => c.Cabinet)
+                  .WithMany(d => d.Cells)
+                  .HasForeignKey(c => c.CabinetId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<UserCellAccess>()
-                .HasOne(uca => uca.Cell)
-                .WithMany(c => c.UserAccesses)
-                .HasForeignKey(uca => uca.CellId);
+            model.Entity<UserCellAccess>()
+                  .HasKey(a => new { a.UserId, a.CellId });
 
-            modelBuilder.Entity<Transaction>()
-                .HasOne(t => t.User)
-                .WithMany(u => u.Transactions)
-                .HasForeignKey(t => t.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            model.Entity<UserCellAccess>()
+                  .HasOne(a => a.User)
+                  .WithMany(u => u.CellAccesses)
+                  .HasForeignKey(a => a.UserId);
 
-            modelBuilder.Entity<Transaction>()
-                .HasOne(t => t.Cell)
-                .WithMany(c => c.Transactions)
-                .HasForeignKey(t => t.CellId)
-                .OnDelete(DeleteBehavior.Restrict); 
+            model.Entity<UserCellAccess>()
+                  .HasOne(a => a.Cell)
+                  .WithMany(c => c.UserAccesses)
+                  .HasForeignKey(a => a.CellId);
+
+            model.Entity<Transaction>()
+                  .HasOne(t => t.User)
+                  .WithMany(u => u.Transactions)
+                  .HasForeignKey(t => t.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            model.Entity<Transaction>()
+                  .HasOne(t => t.Cell)
+                  .WithMany(c => c.Transactions)
+                  .HasForeignKey(t => t.CellId)
+                  .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

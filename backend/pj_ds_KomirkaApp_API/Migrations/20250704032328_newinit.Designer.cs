@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using pj_ds_KomirkaApp_API;
 
@@ -11,9 +12,11 @@ using pj_ds_KomirkaApp_API;
 namespace pj_ds_KomirkaApp_API.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20250704032328_newinit")]
+    partial class newinit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,13 +173,11 @@ namespace pj_ds_KomirkaApp_API.Migrations
                     b.Property<TimeOnly>("ClosesTime")
                         .HasColumnType("time");
 
-                    b.Property<string>("Latitude")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
 
-                    b.Property<string>("Longitude")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
 
                     b.Property<TimeOnly>("OpensTime")
                         .HasColumnType("time");
@@ -208,9 +209,6 @@ namespace pj_ds_KomirkaApp_API.Migrations
 
                     b.Property<bool>("IsReinforced")
                         .HasColumnType("bit");
-
-                    b.Property<int>("UniqueNumber")
-                        .HasColumnType("int");
 
                     b.Property<int>("WeightCapacity")
                         .HasColumnType("int");
