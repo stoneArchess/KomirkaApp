@@ -31,6 +31,7 @@ type UserContextType = {
     tokens: AuthTokens | null;
     isAuthenticated: boolean;
 
+    verify: (code: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     update: (name: string, description: string, region: string, selectedTheme: string) => Promise<void>;
     register: (email: string, password: string, name: string) => Promise<void>;
@@ -46,6 +47,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
     const [user,    setUser]   = useState<User | null>(null);
     const [tokens,  setTokens] = useState<AuthTokens | null>(null);
+    const [userId, setUserId] = useState<number | null>(null);
 
     const isAuthenticated = !!tokens?.access;
 
@@ -73,26 +75,46 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchMe = async (accessToken: string) => {
 
-        const res = await fetch(`${API_BASE}/api/users/me`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
+        console.log("access token: ");
+        console.log(accessToken);
+        const res = await fetch(`${API_BASE}/api/Users/me`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
         });
-        console.log(res);
-        if (!res.ok) throw new Error("Unable to fetch user profile");
+        console.log(res)
+
+        if(!res.ok) throw Error("Couldn't get user data")
         return (await res.json()) as User;
     };
 
     const login = async (email: string, password: string) => {
-        const res = await fetch(`${API_BASE}/api/users/login`, {
+        const res = await fetch(`${API_BASE}/api/Users/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
+        });
+        console.log(res);
+        if (!res.ok) throw new Error("Invalid credentials");
+
+        const { token, expiresIn } = await res.json();
+        const u = await fetchMe(token);
+        await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
+        router.replace("/map");
+    };
+    const verify = async (code: string) => {
+        const res = await fetch(`${API_BASE}/api/users/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, code }),
         });
         if (!res.ok) throw new Error("Invalid credentials");
 
         const { token, expiresIn } = await res.json();
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
-        router.replace("/");
+        router.replace("/map");
     };
 
     const register = async (email: string, password: string, name: string) => {
@@ -102,12 +124,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password, name }),
         });
+        console.log(res);
         if (!res.ok) throw new Error("Registration failed");
-
+        console.log("I AM HERE");
         const { token, expiresIn } = await res.json();
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
-        router.replace("/");
+        console.log(token, expiresIn);
+        router.replace("/map");
     };
 
     const update = async (name: string, description: string, region: string, selectedTheme: string) => {
@@ -141,6 +165,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         tokens,
         isAuthenticated,
         login,
+        verify,
         register,
         logout,
         update,
