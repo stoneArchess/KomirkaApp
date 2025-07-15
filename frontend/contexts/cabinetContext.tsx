@@ -78,11 +78,14 @@ export const CabinetProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const getCabinetCells = async (cabinetId: number) => {
+        console.log("Start of getCabinetCells");
         const res  = await fetch(`${API_BASE}/api/cabinets/${cabinetId}/cells`,
             { headers: authHeaders() });
-        if (!res.ok) throw new Error("Unable to fetch cells for cabinet");
-        const data: Cell[] = await res.json();
+        console.log("Responce:",res);
 
+        if (!res.ok) throw new Error("Unable to fetch cells for cabinet");
+
+        const data: Cell[] = await res.json();
         setCabinetCells(prev => {
             const next = new Map(prev);
             next.set(cabinetId, data);

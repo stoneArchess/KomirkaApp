@@ -4,7 +4,7 @@ import {ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View} from 
 import {styles} from "@/styles/styles";
 import {Href, Link, useRouter} from "expo-router";
 import {useUser} from "@/contexts/userContext";
-import {validatePassword} from "@/app/passwordValidation";
+import {validatePassword} from "@/passwordValidation";
 
 
 export default function  Register () {
