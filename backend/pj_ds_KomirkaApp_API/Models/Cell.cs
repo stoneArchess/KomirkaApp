@@ -5,8 +5,6 @@
 
         public int Id { get; set; }
 
-        //like int but for the inside of the cabinet
-        public int UniqueNumber { get; set; }
         public int WeightCapacity { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }

@@ -18,6 +18,7 @@ namespace pj_ds_KomirkaApp_API
         public DbSet<UserInfo> UsersInfo { get; set; }
         public DbSet<Cabinet> Cabinets { get; set; }
         public DbSet<Cell> Cells { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
         public DbSet<UserCellAccess> UserCellAccesses { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 

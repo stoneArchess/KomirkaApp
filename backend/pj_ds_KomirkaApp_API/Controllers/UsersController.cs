@@ -32,7 +32,7 @@ namespace pj_ds_KomirkaApp_API.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public partial class UsersController : ControllerBase
     {
         private readonly Context _context;          
         private readonly UserManager<User> _users;       
@@ -202,7 +202,7 @@ namespace pj_ds_KomirkaApp_API.Controllers
             return Ok(transactions);
         }
 
-
+        [ApiExplorerSettings(IgnoreApi = true)]
         private string CreateJwt(User user)
         {
             var claims = new[]
@@ -224,22 +224,6 @@ namespace pj_ds_KomirkaApp_API.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-
-
-
-        public record RegisterDto(string Email, string Name, string Password);
-        public record LoginDto(string Email, string Password);
-        public record MeDto(string Email, string Name);
-        public record VerifyDto(int UserId, string Code);
-        public record UpdateProfileDto(
-            string? Name,
-            string? Description,
-            string? Region,
-            string? Theme,
-            string? Email,           
-            string? CurrentPassword, 
-            string? NewPassword);
     }
 
 }

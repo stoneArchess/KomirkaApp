@@ -14,7 +14,7 @@ namespace pj_ds_KomirkaApp_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CabinetsController : ControllerBase
+    public partial class CabinetsController : ControllerBase
     {
         private readonly Context _context;
 
@@ -42,10 +42,7 @@ namespace pj_ds_KomirkaApp_API.Controllers
         {
             var cabinetsDtos = await _context.Cabinets
                                .AsNoTracking()            
-                               .Select(d => new CabinetDto(
-                                   d.Id,
-                                   d.Longitude,
-                                   d.Latitude))
+                               .Select(d => new CabinetDto(d))
                                .ToListAsync();
 
             return Ok(cabinetsDtos);
@@ -54,15 +51,8 @@ namespace pj_ds_KomirkaApp_API.Controllers
         [HttpGet("{id}/cells")]
         public async Task<ActionResult<ICollection<Cell>>> GetCabinetCells(int id)
         {
-            var cells = await _context.Cells
-                                      .Select(c => new CellDto(
-                                          c.Id,
-                                          c.Width,
-                                          c.Height,
-                                          c.WeightCapacity,
-                                          c.IsOccupied,
-                                          c.HasAC,
-                                          c.IsReinforced))
+            var cells = await _context.Cells.Include(c => c.Cabinet)
+                                      .Select(c => new CellDto(c))
                                       .ToListAsync();
 
             return Ok(cells);
@@ -81,15 +71,18 @@ namespace pj_ds_KomirkaApp_API.Controllers
             //var cells1 = new List<Cell>() {
             //    new() {Cabinet = cabinet1!, HasAC = false, IsReinforced = false, IsOccupied = false, WeightCapacity = 12, Height = 1, Width = 1},
             //    new() {Cabinet = cabinet1!, HasAC = true, IsReinforced = true, IsOccupied = false, WeightCapacity = 24, Height = 1, Width = 2},
+
             //    new() {Cabinet = cabinet1!, HasAC = true, IsReinforced = false, IsOccupied = false, WeightCapacity = 12, Height = 1, Width = 1},
 
             //    new() {Cabinet = cabinet1!, HasAC = false, IsReinforced = false, IsOccupied = false, WeightCapacity = 48, Height = 2, Width = 2},
             //    new() {Cabinet = cabinet1!, HasAC = false, IsReinforced = false, IsOccupied = false, WeightCapacity = 12, Height = 1, Width = 1},
+
             //    new() {Cabinet = cabinet1!, HasAC = true, IsReinforced = false, IsOccupied = false, WeightCapacity = 12, Height = 1, Width = 1},
             //    new() {Cabinet = cabinet1!, HasAC = false, IsReinforced = true, IsOccupied = false, WeightCapacity = 24, Height = 1, Width = 2},
 
             //    new() {Cabinet = cabinet1!, HasAC = false, IsReinforced = false, IsOccupied = false, WeightCapacity = 12, Height = 1, Width = 1},
             //    new() {Cabinet = cabinet1!, HasAC = false, IsReinforced = false, IsOccupied = false, WeightCapacity = 12, Height = 1, Width = 1},
+
             //    new() {Cabinet = cabinet1!, HasAC = true, IsReinforced = true, IsOccupied = false, WeightCapacity = 24, Height = 2, Width = 1},
             //    new() {Cabinet = cabinet1!, HasAC = false, IsReinforced = false, IsOccupied = false, WeightCapacity = 24, Height = 2, Width = 1},
 
@@ -141,11 +134,6 @@ namespace pj_ds_KomirkaApp_API.Controllers
 
             return Ok("cells added so awesome");
         }
-
-
-
-        public record CabinetDto(int Id, string Longitude, string Latitude);
-        public record CellDto(int Id, int Width, int Height, int WeightCapacity, bool IsOccupied, bool HasAC, bool IsReonforced);
 
     }
 }
