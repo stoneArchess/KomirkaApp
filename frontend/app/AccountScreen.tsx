@@ -41,7 +41,6 @@ const AccountScreen = () => {
   };
 
   const saveChanges = () => {
-    //Тут буде збереження змін
     Alert.alert('Зміни збережено');
     navigation.goBack();
   };
@@ -105,7 +104,6 @@ const AccountScreen = () => {
         <Text style={styles.saveButtonText}>Зберегти зміни</Text>
       </TouchableOpacity>
 
-      {/*Модальне вікно для підтвердження видалення*/}
       <Modal
         visible={showDeleteModal}
         transparent={true}

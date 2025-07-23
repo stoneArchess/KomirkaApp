@@ -101,7 +101,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const { token, expiresIn } = await res.json();
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
-        router.replace("/map");
+        router.replace("/home");
     };
     const verify = async (code: string) => {
         const res = await fetch(`${API_BASE}/api/users/verify`, {
@@ -114,7 +114,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const { token, expiresIn } = await res.json();
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
-        router.replace("/map");
+        router.replace("/home");
     };
 
     const register = async (email: string, password: string, name: string) => {
@@ -131,7 +131,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const u = await fetchMe(token);
         await persist(u, { access: token, expires: Date.now() + expiresIn * 1000 });
         console.log(token, expiresIn);
-        router.replace("/map");
+        router.replace("/home");
     };
 
     const update = async (name: string, description: string, region: string, selectedTheme: string) => {

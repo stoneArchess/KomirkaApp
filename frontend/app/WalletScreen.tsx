@@ -1,238 +1,138 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Image } from 'react-native';
-import { CreditCardInput } from 'react-native-credit-card-input';
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Animated,
+  StyleSheet,
+  Pressable,
+  PanResponder,
+  Modal,
+  Platform,
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import MapView, { Marker } from 'react-native-maps';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { router } from 'expo-router';
+import { useCabinet, Cell, Cabinet } from '@/contexts/cabinetContext';
+import { useBookings} from "@/contexts/bookingsContext";
+import { SCREEN_HEIGHT } from '@gorhom/bottom-sheet';
 
-type Card = {
-  id: string;
-  last4: string;
-  brand: string;
-  expMonth: number;
-  expYear: number;
-};
+const absoluteFill = StyleSheet.absoluteFill;
 
-const WalletScreen = () => {
-  const navigation = useNavigation();
-  const [cards, setCards] = useState<Card[]>([
-    {
-      id: '1',
-      last4: '4242',
-      brand: 'visa',
-      expMonth: 12,
-      expYear: 25,
-    },
-  ]);
-  const [showAddCardForm, setShowAddCardForm] = useState(false);
-  const [cardData, setCardData] = useState<any>(null);
+export default function MapScreen() {
+  const [selectedCabinet, setSelectedCabinet] = useState<Cabinet | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sizeFilter, setSizeFilter] = useState<'small' | 'medium' | 'big' | null>(null);
+  const [coolingOnly, setCoolingOnly] = useState(false);
+  const [cameraOnly, setCameraOnly] = useState(false);
+  const [orderType, setOrderType] = useState<'personal' | 'delivery' | null>(null);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [deliveryDate, setDeliveryDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [mapModalVisible, setMapModalVisible] = useState(false);
 
-  const handleAddCard = () => {
-    if (!cardData || !cardData.valid) {
-      Alert.alert('Помилка', 'Будь ласка, введіть коректні дані картки');
-      return;
+  const { getCabinets, cabinetCells, cabinets } = useCabinet();
+  const { createBooking } = useBookings();
+
+  useEffect(() => {
+    getCabinets();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCabinet && (searchQuery || sizeFilter || coolingOnly || cameraOnly)) {
+      openPanel();
     }
+  }, [searchQuery, sizeFilter, coolingOnly, cameraOnly, selectedCabinet]);
 
-    const newCard: Card = {
-      id: Math.random().toString(36).substring(7),
-      last4: cardData.values.number.substr(cardData.values.number.length - 4),
-      brand: cardData.values.type || 'unknown',
-      expMonth: parseInt(cardData.values.expiry.split('/')[0]),
-      expYear: parseInt(cardData.values.expiry.split('/')[1]),
-    };
+  const panelAnim = useRef(new Animated.Value(0)).current;
+  const panelHeight = SCREEN_HEIGHT * 0.6;
 
-    setCards([...cards, newCard]);
-    setCardData(null);
-    setShowAddCardForm(false);
-    Alert.alert('Успішно', 'Картка додана до вашого гаманця');
+  const openPanel = () => {
+    Animated.timing(panelAnim, {
+      toValue: -panelHeight,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
   };
 
-  const handleDeleteCard = (cardId: string) => {
-    Alert.alert(
-      'Видалити картку',
-      'Ви впевнені, що хочете видалити цю картку?',
-      [
-        {
-          text: 'Скасувати',
-          style: 'cancel',
-        },
-        {
-          text: 'Видалити',
-          onPress: () => {
-            setCards(cards.filter(card => card.id !== cardId));
-            Alert.alert('Картку видалено');
-          },
-          style: 'destructive',
-        },
-      ],
-    );
+  const closePanel = () => {
+    Animated.timing(panelAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setSelectedCabinet(null));
   };
 
-  const getCardLogo = (brand: string) => {
-    const logos: Record<string, any> = {
-      visa: require('../assets/images/react-logo.png'),
-      mastercard: require('../assets/images/react-logo.png'),
-      amex: require('../assets/images/react-logo.png'),
-      discover: require('../assets/images/react-logo.png'),
+  const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dy > 50) {
+            closePanel();
+          }
+        },
+      })
+  ).current;
+
+  const handleMarkerPress = (cabinet: Cabinet) => {
+    setSelectedCabinet(cabinet);
+    setOrderType(null);
+    openPanel();
+  };
+
+  const getSize = (cell: Cell): 'small' | 'medium' | 'big' => {
+    const area = (cell.width ?? 1) * (cell.height ?? 1);
+    if (area <= 1) return 'small';
+    if (area <= 4) return 'medium';
+    return 'big';
+  };
+
+  const filteredCabinets = useMemo(() => {
+    return cabinets.filter((cabinet) => {
+      const addressMatch = cabinet.address.toLowerCase().includes(searchQuery.toLowerCase());
+      const cells = cabinetCells.get(cabinet.id) ?? [];
+      const hasCooling = !coolingOnly || cells.some((cell) => cell.hasAC);
+      const hasCamera = !cameraOnly || cells.some((cell) => cell.isReinforced);
+      if (!addressMatch || !hasCooling || !hasCamera) return false;
+      if (!sizeFilter) return true;
+      return cells.some((cell) => getSize(cell) === sizeFilter);
+    });
+  }, [searchQuery, sizeFilter, coolingOnly, cameraOnly, cabinets, cabinetCells]);
+
+  const handleBooking = async () => {
+    if (!selectedCabinet) return;
+
+    const booking = {
+      id: 0,
+      cabinetId: selectedCabinet.id,
+      cellId: 0,
+      bookingStatus: 'pending',
+      delivery: orderType === 'delivery',
+      destinationCabinetId: orderType === 'delivery' ? 1 : null,
     };
-    return logos[brand.toLowerCase()] || require('../assets/images/react-logo.png');
+
+    try {
+      await createBooking(booking);
+      router.push({ pathname: '/cellSelection', params: { cabinetId: selectedCabinet.id } });
+    } catch (err) {
+      console.error('Booking failed:', err);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Мій гаманець</Text>
+      <GestureHandlerRootView className="flex-1">
 
-      {cards.length > 0 ? (
-        <FlatList
-          data={cards}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.cardContainer}>
-              <Image source={getCardLogo(item.brand)} style={styles.cardLogo} />
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardText}>•••• •••• •••• {item.last4}</Text>
-                <Text style={styles.cardText}>
-                  Термін дії: {item.expMonth.toString().padStart(2, '0')}/{item.expYear}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteCard(item.id)}
-              >
-                <Text style={styles.deleteButtonText}>Видалити</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        />
-      ) : (
-        <Text style={styles.emptyText}>У вас ще немає доданих карток</Text>
-      )}
-
-      {showAddCardForm ? (
-        <View style={styles.addCardForm}>
-          <CreditCardInput
-            onChange={setCardData}
-          />
-          <View style={styles.formButtons}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={() => setShowAddCardForm(false)}
-            >
-              <Text style={styles.buttonText}>Скасувати</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.addButton]}
-              onPress={handleAddCard}
-            >
-              <Text style={styles.buttonText}>Додати картку</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
         <TouchableOpacity
-          style={styles.addButtonMain}
-          onPress={() => setShowAddCardForm(true)}
+            className="bg-blue-600 py-3 rounded-lg items-center mt-4"
+            onPress={handleBooking}
         >
-          <Text style={styles.addButtonText}>+ Додати картку</Text>
+          <Text className="text-white font-semibold text-base">Продовжити</Text>
         </TouchableOpacity>
-      )}
-    </View>
+
+      </GestureHandlerRootView>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 50,
-  },
-  cardContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardLogo: {
-    width: 40,
-    height: 25,
-    marginRight: 15,
-    resizeMode: 'contain',
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  deleteButtonText: {
-    color: '#FF3B30',
-    fontSize: 14,
-  },
-  addCardForm: {
-    marginTop: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  formButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 15,
-  },
-  button: {
-    padding: 12,
-    borderRadius: 8,
-    width: '48%',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#e0e0e0',
-  },
-  addButton: {
-    backgroundColor: '#3498db',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  addButtonMain: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-});
-
-export default WalletScreen;
+}

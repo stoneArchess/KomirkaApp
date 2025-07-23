@@ -11,7 +11,7 @@ export type Cell = {
     isOccupied: boolean;
     hasAC: boolean;
     isReinforced: boolean;
-    cabinetId: number;
+    cabinet: Cabinet;
 };
 
 export type Cabinet = {
@@ -91,7 +91,7 @@ export const CabinetProvider = ({ children }: { children: ReactNode }) => {
             next.set(cabinetId, data);
             return next;
         });
-        return data;                      // so callers can use it immediately
+        return data;
     };
 
     const changeOccupancy = async (cellId: number, isOccupied: boolean) => {
@@ -106,9 +106,9 @@ export const CabinetProvider = ({ children }: { children: ReactNode }) => {
         setUserCells(apply);
         setAllCells(apply);
         setCabinetCells(prev => {
-            const next = new Map(prev);             // shallow‑copy the map
+            const next = new Map(prev);
             for (const [cabId, cells] of next) {
-                next.set(cabId, apply(cells));        // mutate only the affected arrays
+                next.set(cabId, apply(cells));
             }
             return next;
         });
