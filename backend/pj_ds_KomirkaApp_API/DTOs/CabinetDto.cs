@@ -1,6 +1,6 @@
 ﻿using pj_ds_KomirkaApp_API.Models;
 
-namespace pj_ds_KomirkaApp_API.Controllers
+namespace pj_ds_KomirkaApp_API.DTOs
 {
     public record CabinetDto(int Id,
                               string Address,

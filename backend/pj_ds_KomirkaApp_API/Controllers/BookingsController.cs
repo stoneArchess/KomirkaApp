@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using pj_ds_KomirkaApp_API.Models;
+using pj_ds_KomirkaApp_API.DTOs;
 
 namespace pj_ds_KomirkaApp_API.Controllers
 {
@@ -17,8 +18,8 @@ namespace pj_ds_KomirkaApp_API.Controllers
         private readonly Context _context;
         public BookingsController(Context context) => _context = context;
 
-        [HttpGet("my")]
-        public async Task<ActionResult<IEnumerable<BookingDto>>> My()
+        [HttpGet("getUserBookings")]
+        public async Task<ActionResult<IEnumerable<BookingDto>>> GetUserBookings()
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var bookings = await _context.Bookings
@@ -33,7 +34,7 @@ namespace pj_ds_KomirkaApp_API.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<BookingDto>> Get(int id)
+        public async Task<ActionResult<BookingDto>> GetBooking(int id)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var booking = await _context.Bookings
@@ -46,36 +47,38 @@ namespace pj_ds_KomirkaApp_API.Controllers
 
 
 
-        [HttpPost]
-        public async Task<ActionResult<BookingDto>> Create(CreateBookingDto dto)
+        [HttpPost("createBooking")]
+        public async Task<ActionResult<BookingDto>> CreateBooking(CreateBookingDto dto)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var cell = await _context.Cells.Include(c => c.Cabinet).SingleOrDefaultAsync(c => c.Id == dto.CellId);
             if (cell is null) return BadRequest("Cell not found.");
             if (cell.IsOccupied) return BadRequest("Cell is occupied.");
 
-            var overlap = await _context.Bookings.AnyAsync(b => b.CellId == dto.CellId &&
-                                                               b.Status == BookingStatus.Active &&
-                                                               b.End >= dto.Start &&
-                                                               b.Start <= dto.End);
-            if (overlap) return BadRequest("Cell already booked for that period.");
+            //var overlap = await _context.Bookings.AnyAsync(b => b.CellId == dto.CellId &&
+            //                                                   b.Status == BookingStatus.Active &&
+            //                                                   b.EndDate >= dto.Start &&
+            //                                                   b.StartDate <= dto.End);
+            //if (overlap) return BadRequest("Cell already booked for that period.");
 
             var booking = new Booking
             {
                 CellId = dto.CellId,
                 UserId = userId,
-                Start = dto.Start,
-                End = dto.End,
-                Options = dto.Options,
+                StartDate = dto.Start,
+                EndDate = dto.End,
                 Status = BookingStatus.Active
             };
+            cell.IsOccupied = true;
+
             _context.Bookings.Add(booking);
+            _context.Cells.Update(cell);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = booking.Id }, new BookingDto(booking));
+            return CreatedAtAction(nameof(GetBooking), new { id = booking.Id }, new BookingDto(booking));
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateBookingDto dto)
+        [HttpPut("updateBooking")]
+        public async Task<IActionResult> UpdateBooking(int id, UpdateBookingDto dto)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var booking = await _context.Bookings.Include(b => b.Cell)
@@ -88,39 +91,40 @@ namespace pj_ds_KomirkaApp_API.Controllers
                 var overlap = await _context.Bookings.AnyAsync(b => b.Id != id &&
                                                                    b.CellId == booking.CellId &&
                                                                    b.Status == BookingStatus.Active &&
-                                                                   b.End >= dto.Start &&
-                                                                   b.Start <= dto.End);
+                                                                   b.EndDate >= dto.Start &&
+                                                                   b.StartDate <= dto.End);
                 if (overlap) return BadRequest("Cell already booked for that period.");
-                booking.Start = dto.Start.Value;
-                booking.End = dto.End.Value;
+                booking.StartDate = dto.Start.Value;
+                booking.EndDate = dto.End.Value;
             }
 
-            if (dto.Options is not null) booking.Options = dto.Options;
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Cancel(int id)
+        [HttpDelete("deleteBooking")]
+        public async Task<IActionResult> DeleteBooking( DeleteBookingDto request)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var booking = await _context.Bookings.SingleOrDefaultAsync(b => b.Id == id && b.UserId == userId);
+            var booking = await _context.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id && b.UserId == userId);
             if (booking is null) return NotFound();
-            if (booking.Status == BookingStatus.Cancelled) return BadRequest("Already cancelled.");
 
-            booking.Status = BookingStatus.Cancelled;
+            _context.Bookings.Remove(booking);
             await _context.SaveChangesAsync();
             return NoContent();
         }
     }
 
-    public record CreateBookingDto(int CellId, DateTime Start, DateTime End, string? Options);
+    public record CreateBookingDto(int CellId, DateTime Start, DateTime? End, string? Options, int? DestinationId);
     public record UpdateBookingDto(DateTime? Start, DateTime? End, string? Options);
 
-    public record BookingDto(int Id, DateTime Start, DateTime End, string? Options, string Status, CellDto Cell)
+    public record BookingDto(int Id, DateTime Start, DateTime? End, string Status, CellDto Cell)
     {
-        public BookingDto(Booking b) : this(b.Id, b.Start, b.End, b.Options, b.Status.ToString(), new CellDto(b.Cell)) { }
+        public BookingDto(Booking b) : this(b.Id, b.StartDate, b.EndDate, b.Status.ToString(), new CellDto(b.Cell)) { }
     }
+
+    public class DeleteBookingDto { public int Id { get; set; } }
+
 
     public enum BookingStatus { Active, Cancelled, Finished }
 
