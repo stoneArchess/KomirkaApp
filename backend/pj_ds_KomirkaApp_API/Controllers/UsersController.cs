@@ -86,8 +86,6 @@ namespace pj_ds_KomirkaApp_API.Controllers
             if (user is null)
                 return Unauthorized("Invalid credentials.");
 
-            if (!user.EmailConfirmed)
-                return Unauthorized("Please verify your e‑mail first.");
 
             var ok = await _users.CheckPasswordAsync(user, dto.Password);
             if (!ok)

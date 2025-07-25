@@ -2,7 +2,7 @@
 
 namespace pj_ds_KomirkaApp_API.Models
 {
-    public sealed class User : IdentityUser<int>      // ⬅ inherits everything you had
+    public sealed class User : IdentityUser<int>    
     {
         public UserInfo UserInfo { get; set; }
 

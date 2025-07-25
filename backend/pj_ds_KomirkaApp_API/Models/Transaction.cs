@@ -1,6 +1,5 @@
 ﻿namespace pj_ds_KomirkaApp_API.Models
 {
-    //Cell transaction specifically will need to either refactor this later for all transactions or make a new transaction model
     public class Transaction
     {
         public int Id { get; set; }
