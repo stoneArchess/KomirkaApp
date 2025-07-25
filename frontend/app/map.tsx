@@ -12,17 +12,17 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {Href, router} from 'expo-router';
+import { Href, router } from 'expo-router';
 import { useCabinet, Cell, Cabinet } from '@/contexts/cabinetContext';
 import { SCREEN_HEIGHT } from '@gorhom/bottom-sheet';
-import {Ionicons} from "@expo/vector-icons";
+import { Ionicons } from '@expo/vector-icons';
 
 const absoluteFill = StyleSheet.absoluteFill;
 
 export default function MapScreen() {
     const [selectedCabinet, setSelectedCabinet] = useState<Cabinet | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [sizeFilter, setSizeFilter] = useState<'small' | 'medium' | 'big' | null>(null);
+    const [sizeFilter, setSizeFilter] = useState<'малі' | 'середні' | 'великі' | null>(null);
     const [coolingOnly, setCoolingOnly] = useState(false);
     const [cameraOnly, setCameraOnly] = useState(false);
 
@@ -73,11 +73,11 @@ export default function MapScreen() {
         openPanel();
     };
 
-    const getSize = (cell: Cell): 'small' | 'medium' | 'big' => {
+    const getSize = (cell: Cell): 'малі' | 'середні' | 'великі' => {
         const area = (cell.width ?? 1) * (cell.height ?? 1);
-        if (area <= 1) return 'small';
-        if (area <= 2) return 'medium';
-        return 'big';
+        if (area <= 1) return 'малі';
+        if (area <= 2) return 'середні';
+        return 'великі';
     };
 
     const filteredCabinets = useMemo(() => {
@@ -98,12 +98,12 @@ export default function MapScreen() {
     }, [searchQuery, sizeFilter, coolingOnly, cameraOnly, cabinets, cabinetCells]);
 
     return (
-        <GestureHandlerRootView className="flex-1">
+        <GestureHandlerRootView className="flex-1 bg-black">
             <View className="flex-1">
                 <View className="absolute top-12 left-4 z-10">
                     <Pressable onPress={() => router.back()} className="flex-row items-center space-x-1">
-                        <Ionicons name="arrow-back" size={24} color="black" />
-                        <Text className="text-black font-medium">Назад</Text>
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                        <Text className="text-white font-medium">Назад</Text>
                     </Pressable>
                 </View>
 
@@ -129,19 +129,20 @@ export default function MapScreen() {
                     ))}
                 </MapView>
 
-                <View className="absolute top-6 left-4 right-4 z-10 bg-white p-3 rounded-xl shadow">
+                <View className="absolute top-6 left-4 right-4 z-10 bg-neutral-900 p-3 rounded-xl shadow border border-gray-700">
                     <TextInput
                         placeholder="Пошук адреси..."
+                        placeholderTextColor="#aaa"
                         value={searchQuery}
                         onChangeText={text => {
                             setSearchQuery(text);
                             setSelectedCabinet(null);
                         }}
-                        className="border border-gray-300 rounded-md px-3 py-2 mb-2"
+                        className="border border-gray-600 rounded-md px-3 py-2 mb-2 text-white"
                     />
 
                     <View className="flex-row justify-between space-x-2">
-                        {(['small', 'medium', 'big'] as const).map((size) => (
+                        {(['малі', 'середні', 'великі'] as const).map((size) => (
                             <TouchableOpacity
                                 key={size}
                                 onPress={() => {
@@ -149,10 +150,11 @@ export default function MapScreen() {
                                     setSelectedCabinet(null);
                                 }}
                                 className={`flex-1 px-3 py-2 rounded-md items-center ${
-                                    sizeFilter === size ? 'bg-blue-600' : 'bg-gray-200'
+                                    sizeFilter === size ? 'bg-gradient-to-r from-blue-600 to-white/20' : 'bg-gray-800'
                                 }`}
+                                disabled={true}
                             >
-                                <Text className={`${sizeFilter === size ? 'text-white' : 'text-black'}`}>
+                                <Text className={`${sizeFilter === size ? 'text-white font-semibold' : 'text-gray-300'}`}>
                                     {size[0].toUpperCase() + size.slice(1)}
                                 </Text>
                             </TouchableOpacity>
@@ -166,10 +168,10 @@ export default function MapScreen() {
                                 setSelectedCabinet(null);
                             }}
                             className={`flex-1 px-3 py-2 rounded-md items-center ${
-                                coolingOnly ? 'bg-blue-600' : 'bg-gray-200'
+                                coolingOnly ? 'bg-gradient-to-r from-blue-600 to-white/20' : 'bg-gray-800'
                             }`}
                         >
-                            <Text className={`${coolingOnly ? 'text-white' : 'text-black'}`}>Охолодження</Text>
+                            <Text className={`${coolingOnly ? 'text-white font-semibold' : 'text-gray-300'}`}>Охолодження</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -178,16 +180,15 @@ export default function MapScreen() {
                                 setSelectedCabinet(null);
                             }}
                             className={`flex-1 px-3 py-2 rounded-md items-center ${
-                                cameraOnly ? 'bg-blue-600' : 'bg-gray-200'
+                                cameraOnly ? 'bg-gradient-to-r from-blue-600 to-white/20' : 'bg-gray-800'
                             }`}
                         >
-                            <Text className={`${cameraOnly ? 'text-white' : 'text-black'}`}>Камера</Text>
+                            <Text className={`${cameraOnly ? 'text-white font-semibold' : 'text-gray-300'}`}>Камера</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
                 <Animated.View
-                    {...panResponder.panHandlers}
                     style={{
                         transform: [{ translateY: panelAnim }],
                         position: 'absolute',
@@ -195,7 +196,7 @@ export default function MapScreen() {
                         left: 0,
                         right: 0,
                         height: panelHeight,
-                        backgroundColor: 'white',
+                        backgroundColor: '#111827',
                         borderTopLeftRadius: 16,
                         borderTopRightRadius: 16,
                         shadowColor: '#000',
@@ -208,11 +209,11 @@ export default function MapScreen() {
                 >
                     {selectedCabinet ? (
                         <View className="flex-1 px-5 pt-4 pb-2">
-                            <Text className="text-lg font-semibold text-gray-900 mb-3">
+                            <Text className="text-lg font-semibold text-white mb-3">
                                 {selectedCabinet.address}
                             </Text>
                             <TouchableOpacity
-                                className="bg-blue-600 py-3 rounded-lg items-center mb-2"
+                                className="bg-gradient-to-r from-blue-600 to-white/20 py-3 rounded-lg items-center mb-2"
                                 onPress={() => {
                                     router.push({
                                         pathname: '/cellSelection',
@@ -235,10 +236,10 @@ export default function MapScreen() {
                                 return (
                                     <TouchableOpacity
                                         onPress={() => handleMarkerPress(item)}
-                                        className="border-b border-gray-200 py-3 px-4"
+                                        className="border-b border-gray-700 py-3 px-4"
                                     >
-                                        <Text className="font-semibold text-black">{item.address}</Text>
-                                        <Text className="text-xs text-gray-500">
+                                        <Text className="font-semibold text-white">{item.address}</Text>
+                                        <Text className="text-xs text-gray-400">
                                             {hasAC ? 'Охолодження ' : ''}
                                             {hasCamera ? '| Камера' : ''}
                                         </Text>
@@ -248,14 +249,37 @@ export default function MapScreen() {
                         />
                     )}
                     <Pressable onPress={closePanel} className="absolute top-2 right-4">
-                        <Text className="text-gray-500 text-sm">⬇ Закрити</Text>
+                        <Text className="text-gray-400 text-sm">⬇ Закрити</Text>
                     </Pressable>
                 </Animated.View>
 
-
+                <BottomMenu />
             </View>
         </GestureHandlerRootView>
     );
 }
 
+const MenuItem: React.FC<{ icon: keyof typeof Ionicons.glyphMap; label: string; onPress?: () => void }> = ({ icon, label, onPress }) => (
+    <Pressable className="items-center" onPress={onPress}>
+        <Ionicons name={icon} size={22} color="#4F9EFF" />
+        <Text className="text-[10px] text-gray-300 mt-1">{label}</Text>
+    </Pressable>
+);
 
+function BottomMenu() {
+    function handleMapPress() {
+        router.push('map' as Href);
+    }
+    function handleHomePress() {
+        router.push('home' as Href);
+    }
+
+    return (
+        <View className="absolute bottom-0 inset-x-0 h-16 bg-black border-t border-gray-700 flex-row items-center justify-around">
+            <MenuItem icon="map-outline" label="Мапа" onPress={handleMapPress} />
+            <MenuItem icon="home-outline" label="Головна" onPress={handleHomePress} />
+            <MenuItem icon="person-outline" label="Аккаунт" />
+            <MenuItem icon="ellipsis-horizontal" label="Інше" />
+        </View>
+    );
+}

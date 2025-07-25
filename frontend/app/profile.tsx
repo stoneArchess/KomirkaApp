@@ -1,146 +1,107 @@
-import {ActivityIndicator, Alert, Button, ImageBackground, Text,Image, TextInput, TouchableOpacity, View} from "react-native";
-import {styles} from "@/styles/styles";
-import {Href, Link} from "expo-router";
-import React, {useState} from "react";
-import {User, useUser} from "@/contexts/userContext";
-import {Picker} from "@react-native-picker/picker";
+import React from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
-type EditableUser = Pick<User, 'name' | 'description' | 'region' | 'selectedTheme'>;
+const ProfileScreen = () => {
+  //тимчасово
+  const user = {
+    name: 'Іван Петренко',
+    phone: '+380 99 123 4567',
+    avatar: '../assets/images/sadtestpfp.png',
+  };
 
+  const profileButtons = [
+    { id: 1, title: 'Мій аккаунт' },
+    { id: 2, title: 'Історія' },
+    { id: 3, title: 'Гаманець', screen: 'Wallet' },
+    { id: 4, title: 'Налаштування' },
+    { id: 5, title: 'Вийти з облікового запису', color: '#FF3B30' },
+    { id: 6, title: 'Видалити обліковий запис', color: '#FF3B30' },
+  ];
 
-export default function  Profile () {
-    const {user, update} = useUser()
-    const [editing, setEditing] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [draft, setDraft] = useState<EditableUser | null>(() => user);
+  const handleButtonPress = (buttonId: number) => {
+    console.log(`Натиснута кнопка з id: ${buttonId}`);
+    
+  };
 
-    const cancel = () => {
-        setDraft(user);                           // just copy the whole object back
-        setEditing(false);
-    };
-
-    const save = async () => {
-        if (!draft) {
-            Alert.alert('Nothing to save');
-            return;
-        }
-
-        const { name, description, region, selectedTheme } = draft;
-
-        if (!name || !description || !region || !selectedTheme) {
-            Alert.alert('Please fill out all fields.');
-            return;
-        }
-
-        try {
-            setLoading(true);
-            // context method call here
-            console.log("before upd");
-            await update(draft?.name, draft?.description, draft?.region, draft?.selectedTheme);
-            console.log("after upd");
-            setEditing(false);
-        } catch (err) {
-            Alert.alert('Could not save', err?.toString() ?? 'Please check your connection.' );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) return <ActivityIndicator style={{flex: 1}} />;
-    return (
-        <View style={styles.container}>
-            <Link href={"/" as Href} style={styles.link}>
-                Go back
-            </Link>
-                <ImageBackground
-                    source={require('../assets/images/sadbg.png')}
-                    style={styles.bgImage}
-                    resizeMode="cover"
-                >
-                    <View style={styles.profileImageWrapper}>
-                        <Image source={require('../assets/images/sadtestpfp.png')} style={styles.profileImage}/>
-                    </View>
-                </ImageBackground>
-
-        <View style={styles.infoContainer}>
-            <View style={styles.row}>
-                <Text style={styles.label}>Username</Text>
-                {editing ? (
-                    <TextInput
-                        style={styles.input}
-                        value={draft?.name ?? ''}
-                        onChangeText={text => setDraft(prev => prev ? { ...prev, name: text } : null)}
-                        placeholder="Username"
-                    />
-                ) : (
-                    <Text style={styles.value}>{user?.name}</Text>
-                )}
-            </View>
-
-            <View style={styles.row}>
-                <Text style={styles.label}>Description</Text>
-                {editing ? (
-                    <TextInput
-                        style={[styles.input, styles.multiline]}
-                        multiline
-                        numberOfLines={3}
-                        value={draft?.description ?? ''}
-                        onChangeText={text => setDraft(prev => prev ? { ...prev, description: text } : null)}
-                        placeholder="Tell us about yourself"
-                    />
-                ) : (
-                    <Text style={styles.value}>{user?.description}</Text>
-                )}
-            </View>
-            <View style={styles.row}>
-                <Text style={styles.label}>Rrgion</Text>
-                {editing ? (
-                    <TextInput
-                        style={[styles.input, styles.multiline]}
-                        multiline
-                        numberOfLines={3}
-                        value={draft?.region ?? ''}
-                        onChangeText={text => setDraft(prev => prev ? { ...prev, region: text } : null)}
-                        placeholder="Tell us about your region"
-                    />
-                ) : (
-                    <Text style={styles.value}>{user?.region}</Text>
-                )}
-            </View>
-
-            <View style={styles.row}>
-                {editing ? (
-                    <Picker
-                        selectedValue={draft?.selectedTheme ?? 'blue'}
-                        onValueChange={(value) =>
-                            setDraft(prev => prev ? { ...prev, selectedTheme: value } : null)
-                        }
-                        style={styles.profileInput}
-                    >
-                        <Picker.Item label="Blue" value="blue" />
-                        <Picker.Item label="Dark" value="dark" />
-                        <Picker.Item label="Orange" value="orange" />
-                        <Picker.Item label="White" value="white" />
-                    </Picker>
-                ) : (
-                    <Text style={styles.description}>
-                        {user?.selectedTheme ?? 'No theme selected'}
-                    </Text>
-                )}
-            </View>
-
-            <View style={styles.buttonRow}>
-                {editing ? (
-                    <>
-                        <Button title="Save" onPress={save} />
-                        <Button title="Discard" onPress={cancel} color="grey" />
-                    </>
-                ) : (
-                    <Button title="Edit profile" onPress={() => setEditing(true)} />
-                )}
-            </View>
-
-        </View>
+  return (
+    <View style={styles.container}>
+      {/*Аватарка*/}
+      <View style={styles.avatarContainer}>
+        <Image
+          source={{ uri: user.avatar }}
+          style={styles.avatar}
+          onError={() => console.log("Помилка завантаження аватарки")}
+        />
+      </View>
+      
+      {/*Ім'я та телефон*/}
+      <Text style={styles.name}>{user.name}</Text>
+      <Text style={styles.phone}>{user.phone}</Text>
+      
+      {/*Кнопки профілю*/}
+      <View style={styles.buttonsContainer}>
+        {profileButtons.map((button) => (
+          <TouchableOpacity
+            key={button.id}
+            style={[styles.button, button.color ? { borderColor: button.color } : null]}
+            onPress={() => handleButtonPress(button.id)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.buttonText, button.color ? { color: button.color } : null]}>
+              {button.title}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
-    );
-}
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 20,
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: '#3498db',
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  phone: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+  },
+  buttonsContainer: {
+    width: '100%',
+  },
+  button: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#3498db',
+  },
+});
+
+export default ProfileScreen;

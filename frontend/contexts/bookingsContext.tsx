@@ -1,18 +1,18 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useUser } from "./userContext";
 import {router} from "expo-router";
+import {Cabinet, Cell} from "@/contexts/cabinetContext";
+import {NewBooking} from "@/app/deliverycabinetpicker";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export type Booking = {
     id: number;
-    cellId: number;
-    cabinetId: number;
-    bookingStatus: string;
-    delivery: boolean;
+    cell: Cell;
+    status: string;
     startDate: Date;
     endDate: Date | null;
-    destinationCabinetId: number | null;
+    destinationCabinet: Cabinet | null;
 };
 
 export type BookingsContextType = {
@@ -20,7 +20,7 @@ export type BookingsContextType = {
 
     getUserBookings: () => Promise<void>;
 
-    createBooking: (newBooking: Booking) => Promise<void>;
+    createBooking: (newBooking: NewBooking) => Promise<void>;
     deleteBooking: (booking: Booking) => Promise<void>;
     updateBooking: (newBooking: Booking) => Promise<void>;
 };
@@ -46,7 +46,7 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
         setUserBookings(await res.json());
     };
 
-    const createBooking = async (newBooking: Booking) => {
+    const createBooking = async (newBooking: NewBooking) => {
         const res = await fetch(`${API_BASE}/api/bookings/createBooking`, {
             method: "POST",
             headers: { Authorization: `Bearer ${tokens?.access}`, "Content-Type": "application/json" },

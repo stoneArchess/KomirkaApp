@@ -5,8 +5,8 @@ import {GestureHandlerRootView} from "react-native-gesture-handler";
 import {CabinetProvider} from "@/contexts/cabinetContext";
 import {BookingsProvider} from "@/contexts/bookingsContext";
 import '../global.css';
-import Register from "@/app/auth/register";
 import React from "react";
+import {View} from "react-native";
 
 export default function RootLayout() {
   return <UserProvider>
@@ -14,13 +14,15 @@ export default function RootLayout() {
                 <GestureHandlerRootView>
                      <BottomSheetModalProvider>
                          <BookingsProvider>
+                            <View className="flex-1 bg-black">
+                                 <Stack
+                                      screenOptions={{
+                                          animation: 'fade',
+                                          headerShown: false,
+                                      }}
 
-                         <Stack
-                              screenOptions={{
-                                  animation: 'fade',
-                                  headerShown: false,
-                              }}
-                          />
+                                  />
+                            </View>
                          </BookingsProvider>
                      </BottomSheetModalProvider>
                 </GestureHandlerRootView>

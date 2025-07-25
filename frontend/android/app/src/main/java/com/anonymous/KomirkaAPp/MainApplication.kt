@@ -1,4 +1,4 @@
-package com.anonymous.KomirkaAPp
+package com.anonymous.KomirkaApp
 
 import android.app.Application
 import android.content.res.Configuration
