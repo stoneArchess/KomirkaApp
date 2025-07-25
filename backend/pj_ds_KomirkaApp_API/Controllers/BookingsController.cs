@@ -28,6 +28,7 @@ namespace pj_ds_KomirkaApp_API.Controllers
                                          .Where(b => b.UserId == userId)
                                          .Select(b => new BookingDto(b))
                                          .ToListAsync();
+     
             return Ok(bookings);
         }
 
@@ -55,12 +56,7 @@ namespace pj_ds_KomirkaApp_API.Controllers
             if (cell is null) return BadRequest("Cell not found.");
             if (cell.IsOccupied) return BadRequest("Cell is occupied.");
 
-            //var overlap = await _context.Bookings.AnyAsync(b => b.CellId == dto.CellId &&
-            //                                                   b.Status == BookingStatus.Active &&
-            //                                                   b.EndDate >= dto.Start &&
-            //                                                   b.StartDate <= dto.End);
-            //if (overlap) return BadRequest("Cell already booked for that period.");
-
+     
             var booking = new Booking
             {
                 CellId = dto.CellId,
@@ -115,12 +111,12 @@ namespace pj_ds_KomirkaApp_API.Controllers
         }
     }
 
-    public record CreateBookingDto(int CellId, DateTime Start, DateTime? End, string? Options, int? DestinationId);
-    public record UpdateBookingDto(DateTime? Start, DateTime? End, string? Options);
+    public record CreateBookingDto(int CellId, DateTime Start, DateTime? End, int? DestinationId);
+    public record UpdateBookingDto(DateTime? Start, DateTime? End);
 
-    public record BookingDto(int Id, DateTime Start, DateTime? End, string Status, CellDto Cell)
+    public record BookingDto(int Id, DateTime StartDate, DateTime? EndDate, string Status, CellDto Cell, CabinetDto? DestinationCabinet)
     {
-        public BookingDto(Booking b) : this(b.Id, b.StartDate, b.EndDate, b.Status.ToString(), new CellDto(b.Cell)) { }
+        public BookingDto(Booking b) : this(b.Id, b.StartDate, b.EndDate, b.Status.ToString(), new CellDto(b.Cell), b.DestCabinet != null ? new CabinetDto(b.DestCabinet) : null ) { }
     }
 
     public class DeleteBookingDto { public int Id { get; set; } }
